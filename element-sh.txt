@@ -1,0 +1,41 @@
+#!/bin/bash
+
+#conexión a la Base de datos
+PSQL="psql --username=freecodecamp --dbname=periodic_table -t --no-align -c"
+
+#primer mensaje a ser mostrado
+if [[ -z $1 ]]; then
+  echo "Please provide an element as an argument."
+fi
+#read ARGS
+
+#If you run ./element.sh 1, ./element.sh H, or ./element.sh Hydrogen, it should output only
+#The element with atomic number 1 is Hydrogen (H). 
+#It's a nonmetal, with a mass of 1.008 amu. Hydrogen has a melting point of -259.1 celsius and a boiling point of -252.9 celsius.
+
+ITS="It's a "
+
+if [[ $1 != "" ]]; then
+  ARGS=$1 
+  if [[ $ARGS =~ ^-?[0-9]+$ ]]; then
+    ARGUMENTS=$((ARGS))
+    RES_CONSULTA+=$($PSQL "SELECT 'The element with atomic number '||e.atomic_number||' is '||e.name||' ('||e.symbol||'). ' FROM elements as e WHERE e.atomic_number='$ARGUMENTS';")
+    if [[ -n "$RES_CONSULTA" ]]; then
+      RES_CONSULTA+="$ITS"
+      RES_CONSULTA+=$($PSQL "SELECT t.type||', with a mass of '||p.atomic_mass||' amu. '||e.name||' has a melting point of '||p.melting_point_celsius||' celsius and a boiling point of '||p.boiling_point_celsius||' celsius.' FROM elements as e inner join properties as p using(atomic_number) inner join types as t using(type_id) WHERE e.atomic_number='$ARGUMENTS';")
+    fi
+  else
+    RES_CONSULTA+=$($PSQL "SELECT 'The element with atomic number '||e.atomic_number||' is '||e.name||' ('||e.symbol||'). ' FROM elements as e WHERE UPPER(e.symbol)=UPPER('$ARGS') OR UPPER(e.name) LIKE UPPER('$ARGS');")
+    if [[ -n "$RES_CONSULTA" ]]; then
+      RES_CONSULTA+="$ITS"
+      RES_CONSULTA+=$($PSQL "SELECT t.type||', with a mass of '||p.atomic_mass||' amu. '||e.name||' has a melting point of '||p.melting_point_celsius||' celsius and a boiling point of '||p.boiling_point_celsius||' celsius.' FROM elements as e inner join properties as p using(atomic_number) inner join types as t using(type_id) WHERE UPPER(e.symbol)=UPPER('$ARGS') OR UPPER(e.name) LIKE UPPER('$ARGS');")
+    fi
+  fi
+
+  if [[ -n "$RES_CONSULTA" ]]
+  then
+    echo -e "$RES_CONSULTA"
+  else
+  echo "I could not find that element in the database."
+  fi
+fi

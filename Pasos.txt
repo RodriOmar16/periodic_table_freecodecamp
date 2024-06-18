@@ -1,0 +1,3 @@
+para restaurar el back up: psql -U postgres < periodic_table.sql
+para conectarme a la BD: psql --username=freecodecamp --dbname=periodic_table
+para crear el back up nuevo: pg_dump -cC --inserts -U freecodecamp periodic_table > periodic_table.sql
